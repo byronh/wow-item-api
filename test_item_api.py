@@ -143,6 +143,22 @@ class TestItemAPI(object):
         data = response.json()
         assert set(data['bonusLists']) == set(bonus_lists), 'bonus lists in response did not match request'
 
+    def test_invalid_authentication(self):
+        """ Test that invalid authentication credentials return a 500 error even if the request is otherwise valid. """
+        item_id = 12064  # Gamemaster Hood
+
+        # Make sure that the anonymous request succeeds
+        response = requests.get(ITEM_API_ENDPOINT.format(region=DEFAULT_REGION, object_id=item_id))
+        self.assert_success(response)
+
+        # Now do the same request but with an invalid Authorization header added
+        headers = {'Authorization': 'BNET c1fbf21b79c03191d:+3fE0RaKc+PqxN0gi8va5GQC35A='}
+        response = requests.get(ITEM_API_ENDPOINT.format(region=DEFAULT_REGION, object_id=item_id), headers=headers)
+
+        self.assert_failure(response, error_code=500)
+        data = response.json()
+        assert data['reason'] == 'Invalid Application'
+
     """ Internal helper methods. """
     @classmethod
     def setup_class(cls):
